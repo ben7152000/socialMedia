@@ -41,4 +41,15 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
+// get a user
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+    const { password, updatedAt, ...info } = user._doc
+    return res.status(200).json(info)
+  } catch (e) {
+    return res.status(500).json(e)
+  }
+})
+
 module.exports = router
