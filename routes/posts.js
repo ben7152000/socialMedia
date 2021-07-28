@@ -16,7 +16,8 @@ router.post('/', async (req, res) => {
 // get a post
 router.get('/:id', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
+    const id = req.params.id
+    const post = await Post.findById(id)
     return res.status(200).json(post)
   } catch (e) {
     return res.status(500).json(e)
@@ -26,8 +27,10 @@ router.get('/:id', async (req, res) => {
 // update a post
 router.put('/:id', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
-    if (post.userId === req.body.userId) {
+    const userId = req.body.userId
+    const id = req.params.id
+    const post = await Post.findById(id)
+    if (post.userId === userId) {
       await post.updateOne({ $set: req.body })
       return res.status(200).json('a post has been updated')
     } else {
@@ -41,8 +44,10 @@ router.put('/:id', async (req, res) => {
 // delete a post
 router.delete('/:id', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
-    if (post.userId === req.body.userId) {
+    const userId = req.body.userId
+    const id = req.params.id
+    const post = await Post.findById(id)
+    if (post.userId === userId) {
       await post.deleteOne()
       return res.status(200).json('a post has been deleted')
     } else {
@@ -56,12 +61,14 @@ router.delete('/:id', async (req, res) => {
 // like or dislike a post
 router.put('/:id/like', async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id)
-    if (!post.likes.includes(req.body.userId)) {
-      await post.updateOne({ $push: { likes: req.body.userId } })
+    const userId = req.body.userId
+    const id = req.params.id
+    const post = await Post.findById(id)
+    if (!post.likes.includes(userId)) {
+      await post.updateOne({ $push: { likes: userId } })
       return res.status(200).json('a post has been liked')
     } else {
-      await post.updateOne({ $pull: { likes: req.body.userId } })
+      await post.updateOne({ $pull: { likes: userId } })
       return res.status(200).json('a post has been disliked')
     }
   } catch (e) {
@@ -72,7 +79,8 @@ router.put('/:id/like', async (req, res) => {
 // get timeline all posts
 router.get('/timeline/all', async (req, res) => {
   try {
-    const currentUser = await User.findById(req.body.userId)
+    const userId = req.body.userId
+    const currentUser = await User.findById(userId)
     const userPosts = await Post.find({ userId: currentUser._id })
     const friendPosts = await Promise.all(
       currentUser.followings.map((friendId) => {
@@ -80,6 +88,18 @@ router.get('/timeline/all', async (req, res) => {
       })
     )
     return res.json(userPosts.concat(...friendPosts))
+  } catch (e) {
+    return res.status(500).json(e)
+  }
+})
+
+// get user's all posts
+router.get('/profile/:username', async (req, res) => {
+  try {
+    const username = req.params.username
+    const user = await User.findOne({ username })
+    const posts = await Post.find({ userId: user._id })
+    return res.status(200).json(posts)
   } catch (e) {
     return res.status(500).json(e)
   }
